@@ -1,86 +1,90 @@
-import os
+import streamlit as st
 import pickle
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+import numpy as np
+import os
 
-app = Flask(__name__)
-CORS(app)
+# ---------- PAGE CONFIG ----------
+st.set_page_config(
+    page_title="NutriFit AI",
+    page_icon="💪",
+    layout="wide"
+)
+
+st.title("💪 NutriFit AI – Smart Health Assistant")
+st.caption("AI-powered fitness, nutrition & lifestyle risk prediction")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# ================= LOAD MODELS =================
+# ---------- LOAD MODELS ----------
+@st.cache_resource
+def load_models():
+    workout = pickle.load(open(os.path.join(BASE_DIR, "models", "workout_recommendation_model.pkl"), "rb"))
+    food = pickle.load(open(os.path.join(BASE_DIR, "models", "indian_food_calorie_model.pkl"), "rb"))
+    lifestyle = pickle.load(open(os.path.join(BASE_DIR, "models", "lifestyle_disease_risk_model.pkl"), "rb"))
+    return workout, food, lifestyle
 
-workout_model = pickle.load(
-    open(os.path.join(BASE_DIR, "models", "workout_recommendation_model.pkl"), "rb")
-)
+workout_model, food_model, lifestyle_model = load_models()
 
-food_model = pickle.load(
-    open(os.path.join(BASE_DIR, "models", "indian_food_calorie_model.pkl"), "rb")
-)
+# ---------- TABS ----------
+tab1, tab2, tab3 = st.tabs([
+    "🏋️ Workout Recommendation",
+    "🍛 Indian Food Calories",
+    "🩺 Lifestyle Health Risk"
+])
 
-lifestyle_model = pickle.load(
-    open(os.path.join(BASE_DIR, "models", "lifestyle_disease_risk_model.pkl"), "rb")
-)
+# ---------- TAB 1: WORKOUT ----------
+with tab1:
+    st.subheader("🏋️ Personalized Workout Plan")
 
-# ================= ROUTES =================
+    age = st.number_input("Age", 10, 80)
+    weight = st.number_input("Weight (kg)", 30, 150)
+    height = st.number_input("Height (cm)", 120, 220)
 
-@app.route("/")
-def home():
-    return jsonify({"status": "NutriFit AI Backend Running"})
+    if st.button("Predict Workout"):
+        result = workout_model.predict([[age, weight, height]])[0]
+        st.success(f"✅ Recommended Workout: **{result}**")
 
-# 1️⃣ WORKOUT
-@app.route("/predict/workout", methods=["POST"])
-def predict_workout():
-    data = request.json
+# ---------- TAB 2: FOOD ----------
+with tab2:
+    st.subheader("🍛 Indian Food Calorie Estimation")
 
-    age = data["age"]
-    weight = data["weight"]
-    height = data["height"]
+    food = st.text_input("Enter Indian food name")
 
-    result = workout_model.predict([[age, weight, height]])[0]
+    if st.button("Predict Calories"):
+        calories = food_model.predict([food.lower()])[0]
+        st.info(f"🍽️ **{food.title()}** contains approx **{int(calories)} kcal**")
 
-    return jsonify({
-        "recommended_workout": result
-    })
+# ---------- TAB 3: LIFESTYLE RISK ----------
+with tab3:
+    st.subheader("🩺 Lifestyle Disease Risk Prediction")
 
-# 2️⃣ FOOD CALORIES
-@app.route("/predict/food-calorie", methods=["POST"])
-def predict_food():
-    data = request.json
-    food = data["food"].lower()
+    pregnancies = st.number_input("Pregnancies", 0, 15)
+    glucose = st.number_input("Glucose", 50, 300)
+    bloodpressure = st.number_input("Blood Pressure", 30, 200)
+    skinthickness = st.number_input("Skin Thickness", 0, 100)
+    insulin = st.number_input("Insulin", 0, 900)
+    bmi = st.number_input("BMI", 10.0, 60.0)
+    dpf = st.number_input("Diabetes Pedigree Function", 0.0, 3.0)
+    age_risk = st.number_input("Age", 10, 90)
 
-    calories = food_model.predict([food])[0]
+    if st.button("Predict Risk"):
+        features = [[
+            pregnancies,
+            glucose,
+            bloodpressure,
+            skinthickness,
+            insulin,
+            bmi,
+            dpf,
+            age_risk
+        ]]
 
-    return jsonify({
-        "food": food,
-        "calories": int(calories)
-    })
+        risk = lifestyle_model.predict(features)[0]
+        risk_map = {0: "Low", 1: "Medium", 2: "High"}
 
-# 3️⃣ LIFESTYLE RISK
-@app.route("/predict/lifestyle-risk", methods=["POST"])
-def predict_risk():
-    data = request.json
+        st.warning(f"⚠️ **Lifestyle Disease Risk: {risk_map[risk]}**")
+        st.caption("This is not a medical diagnosis.")
 
-    features = [[
-        data["pregnancies"],
-        data["glucose"],
-        data["bloodpressure"],
-        data["skinthickness"],
-        data["insulin"],
-        data["bmi"],
-        data["diabetespedigreefunction"],
-        data["age"]
-    ]]
-
-    pred = lifestyle_model.predict(features)[0]
-    risk_map = {0: "Low", 1: "Medium", 2: "High"}
-
-    return jsonify({
-        "risk_level": risk_map[pred],
-        "disclaimer": "This is not a medical diagnosis."
-    })
-
-# ================= RUN =================
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+# ---------- FOOTER ----------
+st.markdown("---")
+st.caption("Built with ❤️ using Machine Learning & Streamlit")
