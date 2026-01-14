@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Health & Food Dashboard</title>
+
+    <!-- Attractive & readable font -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h1 class="title">🤖 AI Health & Food Models</h1>
+
+<div class="models">
+
+    <!-- Workout Recommendation -->
+    <div class="card">
+        <h2>🏋️ Workout Recommendation</h2>
+        <input type="number" placeholder="Age">
+        <input type="number" placeholder="Weight (kg)">
+        <input type="number" placeholder="Height (cm)">
+        <input type="text" placeholder="Fitness Goal">
+        <button onclick="runWorkout()">Run</button>
+    </div>
+
+    <!-- Indian Food Prediction -->
+    <div class="card">
+        <h2>🍛 Indian Food Prediction</h2>
+        <input type="text" id="foodNameInput" placeholder="Enter food name">
+        <button onclick="runIndianFood()">Run</button>
+    </div>
+
+    <!-- Lifestyle Risk Prediction -->
+    <div class="card">
+        <h2>🩺 Lifestyle Health Risk </h2>
+        <input id="pregnancies" placeholder="Pregnancies">
+<input id="Glucose" placeholder="Glucose">
+<input id="BloodPressure" placeholder="Blood Pressure">
+<input id="SkinThickness" placeholder="Skin Thickness">
+<input id="Insulin" placeholder="Insulin">
+<input id="BMI" placeholder="BMI">
+<input id="DiabetesPedigreeFunction" placeholder="Diabetes Pedigree Function">
+<input id="AgeRisk" placeholder="Age">
+
+        <button onclick="runLifestyleRisk()">Predict</button>
+
+    </div>
+
+</div>
+
+<div class="output hidden">
+    <h3 id="resultText">Result will appear here</h3>
+    <canvas id="chart"></canvas>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
